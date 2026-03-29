@@ -88,7 +88,7 @@ class RagServiceProvider extends ServiceProvider
 
     protected function registerVectorStore(): void
     {
-        $this->app->singleton(VectorStoreContract::class, function (array $app): \Moneo\LaravelRag\VectorStores\PgvectorStore|\Moneo\LaravelRag\VectorStores\SqliteVecStore {
+        $this->app->singleton(VectorStoreContract::class, function ($app): \Moneo\LaravelRag\VectorStores\PgvectorStore|\Moneo\LaravelRag\VectorStores\SqliteVecStore {
             $driver = $app['config']['rag.vector_store'];
             $storeConfig = $app['config']["rag.stores.{$driver}"];
 
@@ -108,7 +108,7 @@ class RagServiceProvider extends ServiceProvider
 
     protected function registerEmbeddingCache(): void
     {
-        $this->app->singleton(EmbeddingCache::class, fn(array $app): \Moneo\LaravelRag\Cache\EmbeddingCache => new EmbeddingCache(
+        $this->app->singleton(EmbeddingCache::class, fn($app): \Moneo\LaravelRag\Cache\EmbeddingCache => new EmbeddingCache(
             enabled: (bool) $app['config']['rag.embedding.cache'],
         ));
     }
@@ -138,12 +138,12 @@ class RagServiceProvider extends ServiceProvider
 
     protected function registerSearch(): void
     {
-        $this->app->singleton(HybridSearch::class, fn(array $app): \Moneo\LaravelRag\Search\HybridSearch => new HybridSearch(
+        $this->app->singleton(HybridSearch::class, fn($app): \Moneo\LaravelRag\Search\HybridSearch => new HybridSearch(
             vectorStore: $app->make(VectorStoreContract::class),
             rrfK: (int) $app['config']['rag.search.rrf_k'],
         ));
 
-        $this->app->singleton(Reranker::class, fn(array $app): \Moneo\LaravelRag\Search\Reranker => new Reranker(
+        $this->app->singleton(Reranker::class, fn($app): \Moneo\LaravelRag\Search\Reranker => new Reranker(
             enabled: (bool) $app['config']['rag.reranker.enabled'],
             topK: (int) $app['config']['rag.reranker.top_k'],
         ));
