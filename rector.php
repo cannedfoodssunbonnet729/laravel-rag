@@ -25,7 +25,7 @@ return RectorConfig::configure()
         RecastingRemovalRector::class,
         // StrictArrayParamDimFetchRector adds `array` type to $app params in ServiceProvider
         // but $app is Application (ArrayAccess), not array — breaks PHPStan
-        \Rector\Strict\Rector\Stmt\StrictArrayParamDimFetchRector::class => [
+        \Rector\TypeDeclaration\Rector\ClassMethod\StrictArrayParamDimFetchRector::class => [
             __DIR__.'/src/RagServiceProvider.php',
         ],
     ]);
