@@ -69,7 +69,8 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "phpbench/phpbench": true,
-            "infection/infection": true
+            "infection/infection": true,
+            "infection/extension-installer": true
         }
     },
     "minimum-stability": "stable",
