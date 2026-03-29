@@ -1,0 +1,77 @@
+{
+    "name": "moneo/laravel-rag",
+    "description": "A complete, driver-based RAG pipeline for Laravel",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "rag", "vector", "embeddings", "pgvector", "sqlite-vec", "ai", "llm"],
+    "authors": [
+        {
+            "name": "Moneo",
+            "email": "moneo@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/database": "^11.0|^12.0",
+        "illuminate/console": "^11.0|^12.0",
+        "illuminate/events": "^11.0|^12.0",
+        "prism-php/prism": "^1.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "phpbench/phpbench": "^1.3",
+        "mockery/mockery": "^1.6",
+        "infection/infection": "^0.29",
+        "vimeo/psalm": "^6.0",
+        "roave/backward-compatibility-check": "^8.0"
+    },
+    "suggest": {
+        "ankane/pgvector": "Required for the pgvector vector store driver (^0.2)",
+        "barryvdh/laravel-debugbar": "Required for the RAG Debugbar collector (^3.0)",
+        "laravel/telescope": "Required for the RAG Telescope watcher (^5.0)",
+        "livewire/livewire": "Required for the RagChat Livewire component (^3.0)",
+        "filament/filament": "Required for the Filament admin plugin (^3.0)"
+    },
+    "autoload": {
+        "psr-4": {
+            "Moneo\\LaravelRag\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Moneo\\LaravelRag\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Moneo\\LaravelRag\\RagServiceProvider"
+            ],
+            "aliases": {
+                "Rag": "Moneo\\LaravelRag\\Facades\\Rag",
+                "Ingest": "Moneo\\LaravelRag\\Facades\\Ingest",
+                "RagEval": "Moneo\\LaravelRag\\Facades\\RagEval"
+            }
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "test:coverage": "pest --coverage --min=99",
+        "analyse": "phpstan analyse",
+        "format": "pint",
+        "infection": "infection --threads=4 --min-msi=85"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpbench/phpbench": true,
+            "infection/infection": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

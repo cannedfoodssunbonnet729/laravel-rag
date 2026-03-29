@@ -1,0 +1,29 @@
+{
+    "cases": [
+        {
+            "question": "What is pgvector?",
+            "expected": "A PostgreSQL extension for vector similarity search",
+            "tags": ["basic", "definition"]
+        },
+        {
+            "question": "How do I install pgvector?",
+            "expected": "Install via CREATE EXTENSION vector in PostgreSQL",
+            "tags": ["basic", "installation"]
+        },
+        {
+            "question": "What distance metrics does pgvector support?",
+            "expected": "Cosine, L2 (Euclidean), and inner product distance metrics",
+            "tags": ["basic", "technical"]
+        },
+        {
+            "question": "What is HNSW indexing?",
+            "expected": "Hierarchical Navigable Small World graph index for approximate nearest neighbor search",
+            "tags": ["basic", "indexing"]
+        },
+        {
+            "question": "How does RAG work?",
+            "expected": "Retrieval-Augmented Generation retrieves relevant documents and uses them as context for LLM generation",
+            "tags": ["basic", "concept"]
+        }
+    ]
+}

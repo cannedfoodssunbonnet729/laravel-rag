@@ -1,0 +1,105 @@
+deptrac:
+  paths:
+    - ./src
+
+  layers:
+    - name: Facades
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Facades\\.*'
+    - name: Pipeline
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Pipeline\\.*'
+    - name: VectorStores
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\VectorStores\\.*'
+    - name: Chunking
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Chunking\\.*'
+    - name: Search
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Search\\.*'
+    - name: Cache
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Cache\\.*'
+    - name: Memory
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Memory\\.*'
+    - name: Agentic
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Agentic\\.*'
+    - name: Evals
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Evals\\.*'
+    - name: Mcp
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Mcp\\.*'
+    - name: Commands
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Commands\\.*'
+    - name: Security
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Security\\.*'
+    - name: Filament
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Filament\\.*'
+    - name: Livewire
+      collectors:
+        - type: className
+          regex: 'Moneo\\LaravelRag\\Livewire\\.*'
+
+  ruleset:
+    Facades:
+      - Pipeline
+      - Evals
+      - Mcp
+    Pipeline:
+      - VectorStores
+      - Cache
+      - Chunking
+      - Search
+      - Agentic
+      - Memory
+      - Security
+    VectorStores:
+      - Security
+    Chunking: []
+    Search:
+      - VectorStores
+    Cache:
+      - Security
+    Memory:
+      - Pipeline
+    Agentic:
+      - Pipeline
+    Evals:
+      - Pipeline
+    Mcp:
+      - Pipeline
+      - Security
+    Commands:
+      - Pipeline
+      - Evals
+      - Mcp
+      - Cache
+      - Chunking
+    Security: []
+    Filament:
+      - Pipeline
+      - Evals
+      - Memory
+    Livewire:
+      - Pipeline
+      - Memory

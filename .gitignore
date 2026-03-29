@@ -1,0 +1,15 @@
+.DS_Store
+/vendor/
+/node_modules/
+.phpunit.cache/
+.phpbench/
+.psalm/
+composer.lock
+phpunit.xml
+.env
+*.cache
+infection.log
+infection-summary.log
+coverage/
+.idea/
+.vscode/

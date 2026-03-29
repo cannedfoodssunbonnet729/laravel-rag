@@ -1,0 +1,10 @@
+{
+    "runner.bootstrap": "vendor/autoload.php",
+    "runner.path": "tests/Benchmarks",
+    "report.generators": {
+        "default": {
+            "generator": "composite",
+            "reports": ["aggregate"]
+        }
+    }
+}

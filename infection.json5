@@ -1,0 +1,69 @@
+{
+    "$schema": "https://raw.githubusercontent.com/infection/infection/0.29.0/resources/schema.json",
+    "source": {
+        "directories": ["src"]
+    },
+    "timeout": 30,
+    "testFramework": "pest",
+    "testFrameworkOptions": "--testsuite=Unit",
+    "logs": {
+        "text": "infection.log",
+        "summary": "infection-summary.log"
+    },
+    "mutators": {
+        // Logic
+        "TrueValue": true,
+        "FalseValue": true,
+        "LogicalAnd": true,
+        "LogicalOr": true,
+        "LogicalNot": true,
+        "Identical": true,
+        "NotIdentical": true,
+        "Equal": true,
+        "NotEqual": true,
+        "GreaterThan": true,
+        "GreaterThanOrEqualTo": true,
+        "LessThan": true,
+        "LessThanOrEqualTo": true,
+
+        // Math
+        "Plus": true,
+        "Minus": true,
+        "Multiplication": true,
+        "Division": true,
+        "Modulus": true,
+        "Increment": true,
+        "Decrement": true,
+
+        // Return values
+        "ArrayItemRemoval": true,
+        "FunctionCallRemoval": true,
+
+        // Control flow
+        "Break_": true,
+        "Continue_": true,
+        "ElseIfNegation": true,
+        "IfNegation": true,
+        "Foreach_": true,
+
+        // PHP-specific
+        "NullSafeMethodCall": true,
+        "CloneRemoval": true,
+        "SpreadOneItem": true,
+
+        // Level 2: Exception handling mutators
+        "CatchBlockRemoval": true,
+        "Throw_": true,
+
+        // Level 2: Type system mutators
+        "CastInt": true,
+        "CastFloat": true,
+        "CastString": true,
+        "NullSafePropertyCall": true,
+
+        // Level 2: Array mutators
+        "ArrayItemRemoval": true
+    },
+    "minMsi": 90,
+    "minCoveredMsi": 93
+}
