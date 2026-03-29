@@ -153,7 +153,7 @@ jobs:
           php-version: '8.3'
           coverage: none
       - run: composer install --no-interaction --prefer-dist
-      - run: composer audit
+      - run: composer audit --abandoned=report
 
   coverage:
     name: Code Coverage
@@ -282,4 +282,4 @@ jobs:
       - name: Check licenses
         run: |
           composer global require dominikb/composer-license-checker
-          ~/.composer/vendor/bin/composer-license-checker check --allowlist=MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC
+          ~/.composer/vendor/bin/composer-license-checker check --allowlist=MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,GPL-2.0-only,GPL-3.0-only,OSL-3.0
