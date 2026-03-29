@@ -167,7 +167,7 @@ jobs:
           coverage: pcov
       - run: composer install --no-interaction --prefer-dist
       - run: vendor/bin/pest --coverage --min=99 --coverage-clover=coverage.xml
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v6
         with:
           files: coverage.xml
           fail_ci_if_error: true
