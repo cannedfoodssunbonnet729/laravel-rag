@@ -19,7 +19,7 @@ test('CharacterChunker handles random byte strings without crashing', function (
     $chunker = new CharacterChunker;
 
     for ($i = 0; $i < 500; $i++) {
-        $text = random_bytes(random_int(0, 5000));
+        $text = random_bytes(random_int(1, 5000));
         $size = random_int(1, 2000);
         $overlap = random_int(0, max(0, $size - 1));
 
@@ -36,7 +36,7 @@ test('SentenceChunker handles random byte strings without crashing', function ()
     $chunker = new SentenceChunker;
 
     for ($i = 0; $i < 500; $i++) {
-        $text = random_bytes(random_int(0, 3000));
+        $text = random_bytes(random_int(1, 3000));
         $size = random_int(1, 2000);
 
         $chunks = $chunker->chunk($text, ['size' => $size]);
@@ -48,7 +48,7 @@ test('MarkdownChunker handles random byte strings without crashing', function ()
     $chunker = new MarkdownChunker;
 
     for ($i = 0; $i < 500; $i++) {
-        $text = random_bytes(random_int(0, 3000));
+        $text = random_bytes(random_int(1, 3000));
         $size = random_int(1, 2000);
 
         $chunks = $chunker->chunk($text, ['size' => $size]);

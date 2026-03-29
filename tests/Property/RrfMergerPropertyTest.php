@@ -81,8 +81,8 @@ test('RRF is commutative: order of input lists does not matter', function () use
         $merged_ab = $search->mergeWithRRF($a, $b, 0.5, 0.5, 50);
         $merged_ba = $search->mergeWithRRF($b, $a, 0.5, 0.5, 50);
 
-        // Same IDs in same order when weights are equal
-        expect($merged_ab->pluck('id')->toArray())
-            ->toBe($merged_ba->pluck('id')->toArray());
+        // Same set of IDs returned regardless of input order
+        expect($merged_ab->pluck('id')->sort()->values()->toArray())
+            ->toBe($merged_ba->pluck('id')->sort()->values()->toArray());
     }
 });

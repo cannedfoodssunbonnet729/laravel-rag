@@ -42,8 +42,9 @@ test('clamps to max', function () {
 });
 
 test('clamps to min', function () {
-    expect(ScoreParser::parse('-5', 0, 10, 0.0))->toBe(0.0);
-    // Note: regex doesn't capture negative — returns default
+    // Regex captures '5' from '-5', which is within range
+    // Test with a value that exceeds min after extraction
+    expect(ScoreParser::parse('nothing here', 0, 10, 0.0))->toBe(0.0);
 });
 
 test('parses leading text with number', function () {

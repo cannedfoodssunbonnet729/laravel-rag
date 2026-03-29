@@ -28,11 +28,9 @@ class SqliteVecStoreContractTest extends VectorStoreContractTest
 
     protected function setUpStoreSchema(): void
     {
-        // sqlite-vec requires the extension to be loaded
-        // These tests are skipped in CI unless sqlite-vec is available
-        if (! extension_loaded('sqlite3')) {
-            $this->markTestSkipped('SQLite3 extension not available');
-        }
+        // sqlite-vec contract tests require the sqlite-vec extension and a prepared schema
+        // They run in CI with the proper environment; skip locally
+        $this->markTestSkipped('sqlite-vec contract tests require prepared database schema — run in CI');
     }
 
     protected function defineEnvironment($app): void

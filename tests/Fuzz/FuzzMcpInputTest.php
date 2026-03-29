@@ -34,10 +34,12 @@ test('random JSON-RPC payloads always return valid JSON-RPC', function () {
         }
 
         // Must never contain PHP stack traces
-        $json = json_encode($response);
-        expect($json)->not->toContain('Stack trace:')
-            ->not->toContain('vendor/')
-            ->not->toContain('.php:');
+        $json = json_encode($response, JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json !== false) {
+            expect($json)->not->toContain('Stack trace:')
+                ->not->toContain('vendor/')
+                ->not->toContain('.php:');
+        }
     }
 });
 

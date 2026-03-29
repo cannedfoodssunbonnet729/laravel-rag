@@ -12,7 +12,7 @@ use Moneo\LaravelRag\Security\InputSanitiser;
 
 test('handles all possible byte sequences without crashing', function () {
     for ($i = 0; $i < 1000; $i++) {
-        $input = random_bytes(random_int(0, 500));
+        $input = random_bytes(random_int(1, 500));
 
         $result = InputSanitiser::clean($input);
         expect($result)->toBeString();

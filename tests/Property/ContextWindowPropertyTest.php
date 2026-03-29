@@ -25,9 +25,11 @@ test('formatMessages preserves all message content for any number of messages', 
         $messages = collect();
 
         for ($j = 0; $j < $count; $j++) {
-            $msg = Mockery::mock(ThreadMessage::class);
-            $msg->role = ['user', 'assistant'][random_int(0, 1)];
-            $msg->content = bin2hex(random_bytes(random_int(1, 100)));
+            $msg = new ThreadMessage;
+            $msg->forceFill([
+                'role' => ['user', 'assistant'][random_int(0, 1)],
+                'content' => bin2hex(random_bytes(random_int(1, 100))),
+            ]);
             $messages->push($msg);
         }
 

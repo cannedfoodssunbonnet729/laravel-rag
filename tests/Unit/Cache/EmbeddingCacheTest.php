@@ -73,6 +73,7 @@ test('hit rate is 0.0 when all misses', function () {
 });
 
 test('hash produces consistent results', function () {
+    config(['app.key' => 'test-key-for-hashing']);
     $cache = new EmbeddingCache(enabled: true);
     $reflection = new ReflectionClass($cache);
     $method = $reflection->getMethod('hash');
@@ -85,6 +86,7 @@ test('hash produces consistent results', function () {
 });
 
 test('hash produces different results for different text', function () {
+    config(['app.key' => 'test-key-for-hashing']);
     $cache = new EmbeddingCache(enabled: true);
     $reflection = new ReflectionClass($cache);
     $method = $reflection->getMethod('hash');

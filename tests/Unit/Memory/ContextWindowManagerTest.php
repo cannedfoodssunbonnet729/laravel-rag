@@ -11,13 +11,11 @@ test('formatMessages joins with role prefix', function () {
     $method = $reflection->getMethod('formatMessages');
     $method->setAccessible(true);
 
-    $msg1 = Mockery::mock(ThreadMessage::class);
-    $msg1->role = 'user';
-    $msg1->content = 'Hello';
+    $msg1 = new ThreadMessage;
+    $msg1->forceFill(['role' => 'user', 'content' => 'Hello']);
 
-    $msg2 = Mockery::mock(ThreadMessage::class);
-    $msg2->role = 'assistant';
-    $msg2->content = 'Hi there';
+    $msg2 = new ThreadMessage;
+    $msg2->forceFill(['role' => 'assistant', 'content' => 'Hi there']);
 
     $result = $method->invoke($manager, collect([$msg1, $msg2]));
 

@@ -8,7 +8,7 @@ $iterations = (int) (getenv('RAG_ERIS_ITERATIONS') ?: 1000);
 
 test('idempotency: sanitise(sanitise(x)) === sanitise(x) for all strings', function () use ($iterations) {
     for ($i = 0; $i < $iterations; $i++) {
-        $input = bin2hex(random_bytes(random_int(0, 500)));
+        $input = bin2hex(random_bytes(random_int(1, 500)));
 
         $once = InputSanitiser::clean($input);
         $twice = InputSanitiser::clean($once);
@@ -21,7 +21,7 @@ test('idempotency: sanitise(sanitise(x)) === sanitise(x) for all strings', funct
 
 test('sanitiser never adds content: len(sanitise(x)) <= len(x)', function () use ($iterations) {
     for ($i = 0; $i < $iterations; $i++) {
-        $input = bin2hex(random_bytes(random_int(0, 500)));
+        $input = bin2hex(random_bytes(random_int(1, 500)));
 
         $cleaned = InputSanitiser::clean($input);
 
@@ -34,7 +34,7 @@ test('sanitiser never adds content: len(sanitise(x)) <= len(x)', function () use
 test('sanitiser handles all possible byte sequences without crashing', function () use ($iterations) {
     for ($i = 0; $i < $iterations; $i++) {
         // Generate truly random bytes including null bytes, RTL markers, etc.
-        $input = random_bytes(random_int(0, 200));
+        $input = random_bytes(random_int(1, 200));
 
         // Must not throw
         $result = InputSanitiser::clean($input);

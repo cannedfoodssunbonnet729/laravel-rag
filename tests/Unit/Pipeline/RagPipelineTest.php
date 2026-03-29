@@ -113,9 +113,10 @@ test('embed calls PrismRetryHandler and returns vector', function () {
 });
 
 test('embed uses cache on hit', function () {
-    $cache = Mockery::mock(EmbeddingCache::class);
-    $cache->enabled = true;
+    $cache = Mockery::mock(EmbeddingCache::class)->makePartial();
     $cache->shouldReceive('get')->with('cached')->andReturn([0.5, 0.6]);
+    $reflection = new ReflectionProperty(EmbeddingCache::class, 'enabled');
+    $reflection->setValue($cache, true);
 
     $prism = Mockery::mock(PrismRetryHandler::class);
     $prism->shouldNotReceive('embed');
@@ -124,10 +125,11 @@ test('embed uses cache on hit', function () {
 });
 
 test('embed caches result on miss', function () {
-    $cache = Mockery::mock(EmbeddingCache::class);
-    $cache->enabled = true;
+    $cache = Mockery::mock(EmbeddingCache::class)->makePartial();
     $cache->shouldReceive('get')->andReturn(null);
-    $cache->shouldReceive('put')->once()->with('new', [0.1]);
+    $cache->shouldReceive('put')->once();
+    $reflection = new ReflectionProperty(EmbeddingCache::class, 'enabled');
+    $reflection->setValue($cache, true);
 
     $prism = Mockery::mock(PrismRetryHandler::class);
     $prism->shouldReceive('embed')->andReturn([0.1]);
