@@ -37,7 +37,7 @@ test('PgvectorStore rejects SQL injection in table name', function () {
 });
 
 test('SqliteVecStore rejects SQL injection in table name', function () {
-    $store = new SqliteVecStore(connection: 'sqlite', dimensions: 3);
+    $store = new SqliteVecStore(database: ':memory:', dimensions: 3);
 
     $maliciousNames = [
         "'; DROP TABLE users; --",

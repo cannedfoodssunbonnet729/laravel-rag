@@ -22,7 +22,8 @@ return [
         ],
         'sqlite-vec' => [
             'driver' => 'sqlite-vec',
-            'connection' => 'sqlite',
+            'database' => env('RAG_SQLITE_DATABASE', database_path('vector.sqlite')),
+            'extension' => env('RAG_SQLITE_VEC_EXTENSION'), // null = auto (vec0.so from sqlite3.extension_dir)
         ],
     ],
 

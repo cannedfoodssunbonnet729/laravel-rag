@@ -5,22 +5,33 @@ declare(strict_types=1);
 namespace Moneo\LaravelRag\VectorStores;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Moneo\LaravelRag\Exceptions\VectorStoreException;
 use Moneo\LaravelRag\Security\VectorValidator;
 use Moneo\LaravelRag\Support\RagLogger;
 use Moneo\LaravelRag\VectorStores\Contracts\VectorStoreContract;
 
+/**
+ * SQLite-vec vector store driver.
+ *
+ * Uses PHP's SQLite3 class (not PDO) because sqlite-vec requires
+ * SQLite3::loadExtension() to load the vec0 module at runtime.
+ * PDO SQLite does not support load_extension().
+ */
 class SqliteVecStore implements VectorStoreContract
 {
     protected string $table = 'documents';
 
+    protected ?\SQLite3 $sqlite = null;
+
     /**
-     * @param  string  $connection  The database connection name
+     * @param  string  $database  Path to the SQLite database file, or ":memory:"
      * @param  int  $dimensions  The vector dimensions
+     * @param  string|null  $extensionPath  Override vec0 extension path (null = auto from ini)
      */
     public function __construct(
-        protected readonly string $connection,
+        protected readonly string $database,
         protected readonly int $dimensions,
+        protected readonly ?string $extensionPath = null,
     ) {}
 
     /**
@@ -31,6 +42,7 @@ class SqliteVecStore implements VectorStoreContract
         $this->validateTableName($table);
         $clone = clone $this;
         $clone->table = $table;
+        $clone->sqlite = null; // Force new connection for clone
 
         return $clone;
     }
@@ -43,25 +55,39 @@ class SqliteVecStore implements VectorStoreContract
         VectorValidator::validate($vector, $this->dimensions);
         $vectorBlob = $this->vectorToBlob($vector);
 
-        $this->db()->transaction(function () use ($id, $vectorBlob, $metadata): void {
-            $this->db()->statement(
-                "INSERT OR REPLACE INTO {$this->table} (id, embedding, metadata, content, updated_at, created_at)
-                 VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))",
-                [
-                    $id,
-                    $vectorBlob,
-                    json_encode($metadata),
-                    $metadata['content'] ?? '',
-                ]
-            );
+        $db = $this->db();
 
-            // Upsert into the virtual vec table for similarity search
-            $vecTable = "{$this->table}_vec";
-            $this->db()->statement(
-                "INSERT OR REPLACE INTO {$vecTable} (rowid, embedding) VALUES ((SELECT rowid FROM {$this->table} WHERE id = ?), ?)",
-                [$id, $vectorBlob]
+        $db->exec('BEGIN TRANSACTION');
+
+        try {
+            $stmt = $db->prepare(
+                "INSERT OR REPLACE INTO {$this->table} (id, embedding, metadata, content, updated_at, created_at)
+                 VALUES (:id, :embedding, :metadata, :content, datetime('now'), datetime('now'))"
             );
-        });
+            $stmt->bindValue(':id', $id, SQLITE3_TEXT);
+            $stmt->bindValue(':embedding', $vectorBlob, SQLITE3_BLOB);
+            $stmt->bindValue(':metadata', json_encode($metadata), SQLITE3_TEXT);
+            $stmt->bindValue(':content', $metadata['content'] ?? '', SQLITE3_TEXT);
+            $stmt->execute();
+            $stmt->close();
+
+            // Upsert into the virtual vec table
+            $vecTable = "{$this->table}_vec";
+            $stmt2 = $db->prepare(
+                "INSERT OR REPLACE INTO {$vecTable} (rowid, embedding)
+                 VALUES ((SELECT rowid FROM {$this->table} WHERE id = :id), :embedding)"
+            );
+            $stmt2->bindValue(':id', $id, SQLITE3_TEXT);
+            $stmt2->bindValue(':embedding', $vectorBlob, SQLITE3_BLOB);
+            $stmt2->execute();
+            $stmt2->close();
+
+            $db->exec('COMMIT');
+        } catch (\Throwable $e) {
+            $db->exec('ROLLBACK');
+
+            throw new VectorStoreException("SqliteVecStore upsert failed: {$e->getMessage()}", 0, $e);
+        }
     }
 
     /**
@@ -71,24 +97,34 @@ class SqliteVecStore implements VectorStoreContract
     {
         $vectorBlob = $this->vectorToBlob($vector);
         $vecTable = "{$this->table}_vec";
+        $db = $this->db();
 
-        $results = $this->db()->select(
+        $stmt = $db->prepare(
             "SELECT d.id, d.metadata, d.content, v.distance
              FROM {$vecTable} v
              JOIN {$this->table} d ON d.rowid = v.rowid
-             WHERE v.embedding MATCH ?
-                AND k = ?",
-            [$vectorBlob, $limit]
+             WHERE v.embedding MATCH :embedding
+                AND k = :limit"
         );
+        $stmt->bindValue(':embedding', $vectorBlob, SQLITE3_BLOB);
+        $stmt->bindValue(':limit', $limit, SQLITE3_INTEGER);
+        $result = $stmt->execute();
 
-        return collect($results)
-            ->map(fn ($row): array => [
-                'id' => (string) $row->id,
-                'score' => 1.0 - (float) $row->distance,
-                'metadata' => (array) (json_decode((string) $row->metadata, true) ?? []),
-                'content' => (string) ($row->content ?? ''),
+        $rows = [];
+
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $rows[] = $row;
+        }
+        $stmt->close();
+
+        return collect($rows)
+            ->map(fn (array $row): array => [
+                'id' => (string) $row['id'],
+                'score' => 1.0 - (float) $row['distance'],
+                'metadata' => (array) (json_decode((string) $row['metadata'], true) ?? []),
+                'content' => (string) ($row['content'] ?? ''),
             ])
-            ->filter(fn ($row): bool => $row['score'] >= $threshold)
+            ->filter(fn (array $row): bool => $row['score'] >= $threshold)
             ->values();
     }
 
@@ -109,17 +145,28 @@ class SqliteVecStore implements VectorStoreContract
      */
     public function delete(string $id): void
     {
-        $this->db()->transaction(function () use ($id): void {
+        $db = $this->db();
+        $db->exec('BEGIN TRANSACTION');
+
+        try {
             $vecTable = "{$this->table}_vec";
 
-            // Delete from vec table first (needs rowid)
-            $this->db()->statement(
-                "DELETE FROM {$vecTable} WHERE rowid = (SELECT rowid FROM {$this->table} WHERE id = ?)",
-                [$id]
-            );
+            $stmt = $db->prepare("DELETE FROM {$vecTable} WHERE rowid = (SELECT rowid FROM {$this->table} WHERE id = :id)");
+            $stmt->bindValue(':id', $id, SQLITE3_TEXT);
+            $stmt->execute();
+            $stmt->close();
 
-            $this->db()->table($this->table)->where('id', $id)->delete();
-        });
+            $stmt2 = $db->prepare("DELETE FROM {$this->table} WHERE id = :id");
+            $stmt2->bindValue(':id', $id, SQLITE3_TEXT);
+            $stmt2->execute();
+            $stmt2->close();
+
+            $db->exec('COMMIT');
+        } catch (\Throwable $e) {
+            $db->exec('ROLLBACK');
+
+            throw new VectorStoreException("SqliteVecStore delete failed: {$e->getMessage()}", 0, $e);
+        }
     }
 
     /**
@@ -129,11 +176,19 @@ class SqliteVecStore implements VectorStoreContract
     {
         $this->validateTableName($collection);
 
-        $this->db()->transaction(function () use ($collection): void {
+        $db = $this->db();
+        $db->exec('BEGIN TRANSACTION');
+
+        try {
             $vecTable = "{$collection}_vec";
-            $this->db()->statement("DELETE FROM {$vecTable}");
-            $this->db()->table($collection)->truncate();
-        });
+            $db->exec("DELETE FROM {$vecTable}");
+            $db->exec("DELETE FROM {$collection}");
+            $db->exec('COMMIT');
+        } catch (\Throwable $e) {
+            $db->exec('ROLLBACK');
+
+            throw new VectorStoreException("SqliteVecStore flush failed: {$e->getMessage()}", 0, $e);
+        }
     }
 
     /**
@@ -167,10 +222,41 @@ class SqliteVecStore implements VectorStoreContract
     }
 
     /**
-     * Get the database connection.
+     * Get or create the SQLite3 connection with vec0 extension loaded.
+     *
+     * @throws VectorStoreException
      */
-    protected function db(): \Illuminate\Database\Connection
+    protected function db(): \SQLite3
     {
-        return DB::connection($this->connection);
+        if ($this->sqlite instanceof \SQLite3) {
+            return $this->sqlite;
+        }
+
+        try {
+            $this->sqlite = new \SQLite3($this->database);
+            $this->sqlite->enableExceptions(true);
+            $this->sqlite->busyTimeout(5000);
+
+            // Load sqlite-vec extension
+            $extension = $this->extensionPath ?? 'vec0.so';
+            $this->sqlite->loadExtension($extension);
+        } catch (\Throwable $e) {
+            throw new VectorStoreException(
+                "Failed to initialize SqliteVecStore: {$e->getMessage()}. "
+                .'Ensure sqlite-vec is installed and sqlite3.extension_dir is set in php.ini.',
+                0,
+                $e,
+            );
+        }
+
+        return $this->sqlite;
+    }
+
+    public function __destruct()
+    {
+        if ($this->sqlite instanceof \SQLite3) {
+            $this->sqlite->close();
+            $this->sqlite = null;
+        }
     }
 }

@@ -13,14 +13,14 @@ use Moneo\LaravelRag\VectorStores\SqliteVecStore;
  */
 class SqliteVecStoreContractTest extends VectorStoreContractTest
 {
-    private static string $dbPath = '/tmp/laravel_rag_contract_test.sqlite';
-
     private static bool $vecAvailable = false;
+
+    private static string $dbPath = '/tmp/laravel_rag_vec_test.sqlite';
 
     protected function createStore(): VectorStoreContract
     {
         return new SqliteVecStore(
-            connection: 'testing',
+            database: self::$dbPath,
             dimensions: (int) config('rag.embedding.dimensions', 3),
         );
     }
@@ -28,8 +28,17 @@ class SqliteVecStoreContractTest extends VectorStoreContractTest
     protected function setUpStoreSchema(): void
     {
         if (! self::$vecAvailable) {
-            $this->markTestSkipped('sqlite-vec not loadable');
+            $this->markTestSkipped('sqlite-vec not loadable — set sqlite3.extension_dir in php.ini');
         }
+
+        // Create fresh DB with vec0 tables
+        @unlink(self::$dbPath);
+        $db = new \SQLite3(self::$dbPath);
+        $db->enableExceptions(true);
+        $db->loadExtension('vec0.so');
+        $db->exec('CREATE TABLE documents (id TEXT PRIMARY KEY, embedding BLOB, metadata TEXT, content TEXT, created_at TEXT, updated_at TEXT)');
+        $db->exec('CREATE VIRTUAL TABLE documents_vec USING vec0(embedding float[3])');
+        $db->close();
     }
 
     protected function defineEnvironment($app): void
@@ -47,34 +56,14 @@ class SqliteVecStoreContractTest extends VectorStoreContractTest
             }
         }
 
-        // Use file-based SQLite
-        $app['config']->set('database.default', 'testing');
-        $app['config']->set('database.connections.testing', [
-            'driver' => 'sqlite',
-            'database' => self::$dbPath,
-            'prefix' => '',
-            'foreign_key_constraints' => true,
-        ]);
-        $app['config']->set('rag.vector_store', 'sqlite-vec');
-        $app['config']->set('rag.stores.sqlite-vec.connection', 'testing');
+        parent::defineEnvironment($app);
         $app['config']->set('rag.embedding.dimensions', 3);
-        $app['config']->set('rag.embedding.cache', false);
+        $app['config']->set('rag.stores.sqlite-vec.database', self::$dbPath);
     }
 
     protected function defineDatabaseMigrations(): void
     {
-        if (! self::$vecAvailable) {
-            return;
-        }
-
-        // Create DB file with vec0 tables via SQLite3 class
-        @unlink(self::$dbPath);
-        $db = new \SQLite3(self::$dbPath);
-        $db->enableExceptions(true);
-        $db->loadExtension('vec0.so');
-        $db->exec('CREATE TABLE documents (id TEXT PRIMARY KEY, embedding BLOB, metadata TEXT, content TEXT, created_at TEXT, updated_at TEXT)');
-        $db->exec('CREATE VIRTUAL TABLE documents_vec USING vec0(embedding float[3])');
-        $db->close();
+        // Skip parent's migrations — we manage schema in setUpStoreSchema
     }
 
     protected function tearDown(): void

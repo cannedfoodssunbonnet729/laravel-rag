@@ -98,8 +98,9 @@ class RagServiceProvider extends ServiceProvider
                     dimensions: (int) $app['config']['rag.embedding.dimensions'],
                 ),
                 'sqlite-vec' => new SqliteVecStore(
-                    connection: $storeConfig['connection'],
+                    database: $storeConfig['database'] ?? database_path('vector.sqlite'),
                     dimensions: (int) $app['config']['rag.embedding.dimensions'],
+                    extensionPath: $storeConfig['extension'] ?? null,
                 ),
                 default => throw new \InvalidArgumentException("Unsupported vector store driver: {$storeConfig['driver']}"),
             };

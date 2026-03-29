@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Moneo\LaravelRag\VectorStores\SqliteVecStore;
 
 test('vectorToBlob produces correct byte length', function () {
-    $store = new SqliteVecStore(connection: 'sqlite', dimensions: 3);
+    $store = new SqliteVecStore(database: ':memory:', dimensions: 3);
     $reflection = new ReflectionClass($store);
     $method = $reflection->getMethod('vectorToBlob');
     $method->setAccessible(true);
@@ -16,7 +16,7 @@ test('vectorToBlob produces correct byte length', function () {
 });
 
 test('vectorToBlob empty array produces empty string', function () {
-    $store = new SqliteVecStore(connection: 'sqlite', dimensions: 0);
+    $store = new SqliteVecStore(database: ':memory:', dimensions: 0);
     $reflection = new ReflectionClass($store);
     $method = $reflection->getMethod('vectorToBlob');
     $method->setAccessible(true);
@@ -27,7 +27,7 @@ test('vectorToBlob empty array produces empty string', function () {
 });
 
 test('vectorToBlob high dimensions (3072)', function () {
-    $store = new SqliteVecStore(connection: 'sqlite', dimensions: 3072);
+    $store = new SqliteVecStore(database: ':memory:', dimensions: 3072);
     $reflection = new ReflectionClass($store);
     $method = $reflection->getMethod('vectorToBlob');
     $method->setAccessible(true);
@@ -39,25 +39,25 @@ test('vectorToBlob high dimensions (3072)', function () {
 });
 
 test('does not support full text search', function () {
-    $store = new SqliteVecStore(connection: 'sqlite', dimensions: 1536);
+    $store = new SqliteVecStore(database: ':memory:', dimensions: 1536);
 
     expect($store->supportsFullTextSearch())->toBeFalse();
 });
 
 test('table returns new instance', function () {
-    $store = new SqliteVecStore(connection: 'sqlite', dimensions: 1536);
+    $store = new SqliteVecStore(database: ':memory:', dimensions: 1536);
     $newStore = $store->table('custom_table');
 
     expect($newStore)->not->toBe($store);
 });
 
 test('table rejects SQL injection', function () {
-    $store = new SqliteVecStore(connection: 'sqlite', dimensions: 1536);
+    $store = new SqliteVecStore(database: ':memory:', dimensions: 1536);
     $store->table('Robert; DROP TABLE students--');
 })->throws(\InvalidArgumentException::class, 'Invalid table name');
 
 test('table accepts valid names', function () {
-    $store = new SqliteVecStore(connection: 'sqlite', dimensions: 1536);
+    $store = new SqliteVecStore(database: ':memory:', dimensions: 1536);
     $newStore = $store->table('documents_v2');
 
     expect($newStore)->toBeInstanceOf(SqliteVecStore::class);
