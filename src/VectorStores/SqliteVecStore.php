@@ -241,9 +241,17 @@ class SqliteVecStore implements VectorStoreContract
             $extension = $this->extensionPath ?? 'vec0.so';
             $this->sqlite->loadExtension($extension);
         } catch (\Throwable $e) {
+            $hint = str_contains($e->getMessage(), 'Extensions are disabled')
+                ? 'Your PHP binary was compiled without SQLite extension loading support. '
+                  .'This is common on macOS (Herd, Homebrew). Options: '
+                  .'(1) Use Docker/Laravel Sail, '
+                  .'(2) Switch to pgvector: RAG_VECTOR_STORE=pgvector in .env, '
+                  .'(3) Install PHP from ondrej/php PPA (Linux).'
+                : 'Ensure sqlite-vec is installed and sqlite3.extension_dir is set in php.ini. '
+                  .'Download from: https://github.com/asg017/sqlite-vec/releases';
+
             throw new VectorStoreException(
-                "Failed to initialize SqliteVecStore: {$e->getMessage()}. "
-                .'Ensure sqlite-vec is installed and sqlite3.extension_dir is set in php.ini.',
+                "Failed to initialize SqliteVecStore: {$e->getMessage()}. {$hint}",
                 0,
                 $e,
             );

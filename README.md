@@ -34,7 +34,13 @@ A complete, driver-based RAG (Retrieval-Augmented Generation) pipeline for Larav
 
 - PHP 8.2+
 - Laravel 11+
-- [Prism PHP](https://github.com/prism-php/prism) ^1.0
+- [Prism PHP](https://github.com/prism-php/prism) ^0.100
+
+**Vector store (choose one):**
+- **pgvector** (recommended for production) — PostgreSQL + [pgvector extension](https://github.com/pgvector/pgvector)
+- **sqlite-vec** (local dev, Docker/Linux only) — [sqlite-vec](https://github.com/asg017/sqlite-vec)
+
+> **Note:** sqlite-vec requires PHP compiled with SQLite extension loading support. macOS PHP (Herd, Homebrew) does **not** support this. Use Docker, Laravel Sail, or switch to pgvector on macOS.
 
 ## Installation
 
@@ -72,6 +78,56 @@ RAG_LLM_MODEL=gpt-4o
 
 # Embedding cache (reduces API costs)
 RAG_EMBEDDING_CACHE=true
+```
+
+## Vector Store Setup
+
+### Option A: pgvector (recommended)
+
+Works everywhere. Requires PostgreSQL with pgvector extension.
+
+```env
+RAG_VECTOR_STORE=pgvector
+```
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+### Option B: sqlite-vec (Docker/Linux only)
+
+Zero-infrastructure local dev. **Does NOT work on macOS Herd/Homebrew PHP.**
+
+```env
+RAG_VECTOR_STORE=sqlite-vec
+RAG_SQLITE_DATABASE=/path/to/your/vectors.sqlite
+```
+
+**Linux (Ubuntu/Debian):**
+```bash
+# 1. Download sqlite-vec
+wget https://github.com/asg017/sqlite-vec/releases/download/v0.1.7/sqlite-vec-0.1.7-loadable-linux-x86_64.tar.gz
+tar xzf sqlite-vec-*.tar.gz
+sudo mkdir -p /usr/lib/sqlite-vec && sudo cp vec0.so /usr/lib/sqlite-vec/
+
+# 2. Add to php.ini
+echo "sqlite3.extension_dir=/usr/lib/sqlite-vec" | sudo tee /etc/php/8.3/cli/conf.d/99-sqlite-vec.ini
+
+# 3. Verify
+php -r '$db = new SQLite3(":memory:"); $db->loadExtension("vec0.so"); echo "OK\n";'
+```
+
+**Docker / Laravel Sail:**
+```dockerfile
+# Add to your Dockerfile
+RUN wget -q https://github.com/asg017/sqlite-vec/releases/download/v0.1.7/sqlite-vec-0.1.7-loadable-linux-x86_64.tar.gz \
+    && tar xzf sqlite-vec-*.tar.gz && mkdir -p /usr/lib/sqlite-vec && cp vec0.so /usr/lib/sqlite-vec/ \
+    && echo "sqlite3.extension_dir=/usr/lib/sqlite-vec" >> /usr/local/etc/php/conf.d/sqlite-vec.ini
+```
+
+**macOS:** sqlite-vec is not supported with Herd or Homebrew PHP. Use pgvector instead:
+```env
+RAG_VECTOR_STORE=pgvector
 ```
 
 ## Quick Start
