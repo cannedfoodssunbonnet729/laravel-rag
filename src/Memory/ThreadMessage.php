@@ -7,6 +7,14 @@ namespace Moneo\LaravelRag\Memory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $thread_id
+ * @property string $role
+ * @property string $content
+ * @property int $tokens
+ * @property array<string, mixed>|null $metadata
+ */
 class ThreadMessage extends Model
 {
     protected $table = 'rag_thread_messages';

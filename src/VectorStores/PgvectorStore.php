@@ -83,10 +83,10 @@ class PgvectorStore implements VectorStoreContract
         );
 
         return collect($results)->map(fn ($row) => [
-            'id' => $row->id,
+            'id' => (string) $row->id,
             'score' => (float) $row->score,
-            'metadata' => json_decode($row->metadata, true) ?? [],
-            'content' => $row->content ?? '',
+            'metadata' => (array) (json_decode((string) $row->metadata, true) ?? []),
+            'content' => (string) ($row->content ?? ''),
         ]);
     }
 
@@ -131,10 +131,10 @@ class PgvectorStore implements VectorStoreContract
         );
 
         return collect($results)->map(fn ($row) => [
-            'id' => $row->id,
+            'id' => (string) $row->id,
             'score' => (float) $row->score,
-            'metadata' => json_decode($row->metadata, true) ?? [],
-            'content' => $row->content ?? '',
+            'metadata' => (array) (json_decode((string) $row->metadata, true) ?? []),
+            'content' => (string) ($row->content ?? ''),
         ]);
     }
 

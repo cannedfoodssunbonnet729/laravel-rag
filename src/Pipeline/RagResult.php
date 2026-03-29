@@ -35,9 +35,9 @@ class RagResult implements Arrayable
     public function sources(): Collection
     {
         return $this->chunks->map(fn (array $chunk) => [
-            'source' => $chunk['metadata']['source'] ?? 'Unknown',
+            'source' => (string) ($chunk['metadata']['source'] ?? 'Unknown'),
             'score' => $chunk['score'],
-            'preview' => mb_substr($chunk['content'] ?? '', 0, 200),
+            'preview' => mb_substr($chunk['content'], 0, 200),
         ]);
     }
 

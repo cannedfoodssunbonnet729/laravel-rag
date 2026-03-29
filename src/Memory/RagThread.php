@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\DB;
 use Moneo\LaravelRag\Facades\Rag;
 use Moneo\LaravelRag\Pipeline\RagResult;
 
+/**
+ * @property int $id
+ * @property string|null $model
+ * @property string|null $title
+ * @property array<string, mixed>|null $metadata
+ */
 class RagThread extends Model
 {
     protected $table = 'rag_threads';

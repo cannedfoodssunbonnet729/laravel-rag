@@ -83,10 +83,10 @@ class SqliteVecStore implements VectorStoreContract
 
         return collect($results)
             ->map(fn ($row) => [
-                'id' => $row->id,
+                'id' => (string) $row->id,
                 'score' => 1.0 - (float) $row->distance,
-                'metadata' => json_decode($row->metadata, true) ?? [],
-                'content' => $row->content ?? '',
+                'metadata' => (array) (json_decode((string) $row->metadata, true) ?? []),
+                'content' => (string) ($row->content ?? ''),
             ])
             ->filter(fn ($row) => $row['score'] >= $threshold)
             ->values();

@@ -67,7 +67,7 @@ class RagPipeline
     /**
      * Set the source model class for retrieval.
      *
-     * @return $this
+     * @return static
      */
     public function from(string $modelClass): static
     {
