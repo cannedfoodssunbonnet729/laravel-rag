@@ -76,3 +76,17 @@ test('table accepts schema-qualified names', function () {
 
     expect($newStore)->toBeInstanceOf(PgvectorStore::class);
 });
+
+test('updateEmbedding validates vector before update', function () {
+    $store = new PgvectorStore(connection: 'pgsql', dimensions: 3);
+
+    expect(fn () => $store->updateEmbedding('id-1', [0.1, 0.2], []))
+        ->toThrow(\Moneo\LaravelRag\Security\InvalidVectorException::class, 'dimension mismatch');
+});
+
+test('updateEmbedding rejects NaN', function () {
+    $store = new PgvectorStore(connection: 'pgsql', dimensions: 3);
+
+    expect(fn () => $store->updateEmbedding('id-1', [0.1, NAN, 0.3], []))
+        ->toThrow(\Moneo\LaravelRag\Security\InvalidVectorException::class, 'NaN');
+});

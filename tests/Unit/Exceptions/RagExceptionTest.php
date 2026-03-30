@@ -90,3 +90,15 @@ test('CacheTableMissingException has migration hint in message', function () {
     expect($e->getMessage())->toContain('rag_embedding_cache')
         ->and($e->getMessage())->toContain('php artisan');
 });
+
+test('MissingApiKeyException includes provider name and instructions', function () {
+    $e = new \Moneo\LaravelRag\Exceptions\MissingApiKeyException('openai');
+
+    expect($e->getMessage())->toContain('openai')
+        ->and($e->getMessage())->toContain('OPENAI_API_KEY')
+        ->and($e->getMessage())->toContain('.env');
+});
+
+test('MissingApiKeyException extends RagException', function () {
+    expect(new \Moneo\LaravelRag\Exceptions\MissingApiKeyException)->toBeInstanceOf(RagException::class);
+});

@@ -87,3 +87,43 @@ test('empty chunks returns empty sources', function () {
 
     expect($result->sources())->toBeEmpty();
 });
+
+test('sourceModels returns empty for chunks without model metadata', function () {
+    $result = new RagResult(
+        answer: 'Answer',
+        chunks: collect([
+            ['id' => '1', 'score' => 0.9, 'metadata' => [], 'content' => 'No model info'],
+        ]),
+        question: 'Q?',
+        retrievalTimeMs: 0,
+        generationTimeMs: 0,
+    );
+
+    expect($result->sourceModels())->toBeEmpty();
+});
+
+test('sourceModels returns empty for empty chunks', function () {
+    $result = new RagResult(
+        answer: 'Answer',
+        chunks: collect(),
+        question: 'Q?',
+        retrievalTimeMs: 0,
+        generationTimeMs: 0,
+    );
+
+    expect($result->sourceModels())->toBeEmpty();
+});
+
+test('sourceModels filters out nonexistent model classes', function () {
+    $result = new RagResult(
+        answer: 'Answer',
+        chunks: collect([
+            ['id' => '1', 'score' => 0.9, 'metadata' => ['model' => 'App\\Models\\NonExistent', 'id' => 1], 'content' => 'X'],
+        ]),
+        question: 'Q?',
+        retrievalTimeMs: 0,
+        generationTimeMs: 0,
+    );
+
+    expect($result->sourceModels())->toBeEmpty();
+});

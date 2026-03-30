@@ -118,3 +118,50 @@ test('calculateDelay increases exponentially', function () {
     expect($delays[1])->toBeGreaterThan($delays[0])
         ->and($delays[2])->toBeGreaterThan($delays[1]);
 });
+
+// === validateApiKey ===
+
+test('validateApiKey throws MissingApiKeyException for openai without key', function () {
+    config(['services.openai.api_key' => null, 'prism.providers.openai.api_key' => null]);
+
+    $handler = new PrismRetryHandler;
+    $ref = new ReflectionClass($handler);
+    $method = $ref->getMethod('validateApiKey');
+    $method->setAccessible(true);
+
+    $method->invoke($handler, 'openai');
+})->throws(\Moneo\LaravelRag\Exceptions\MissingApiKeyException::class, 'openai');
+
+test('validateApiKey passes when key is configured', function () {
+    config(['services.openai.api_key' => 'sk-test-key']);
+
+    $handler = new PrismRetryHandler;
+    $ref = new ReflectionClass($handler);
+    $method = $ref->getMethod('validateApiKey');
+    $method->setAccessible(true);
+
+    $method->invoke($handler, 'openai');
+    expect(true)->toBeTrue(); // No exception
+});
+
+test('validateApiKey passes for unknown providers', function () {
+    $handler = new PrismRetryHandler;
+    $ref = new ReflectionClass($handler);
+    $method = $ref->getMethod('validateApiKey');
+    $method->setAccessible(true);
+
+    $method->invoke($handler, 'custom-provider');
+    expect(true)->toBeTrue(); // Unknown providers are not validated
+});
+
+test('validateApiKey checks prism config fallback', function () {
+    config(['services.openai.api_key' => null, 'prism.providers.openai.api_key' => 'prism-key']);
+
+    $handler = new PrismRetryHandler;
+    $ref = new ReflectionClass($handler);
+    $method = $ref->getMethod('validateApiKey');
+    $method->setAccessible(true);
+
+    $method->invoke($handler, 'openai');
+    expect(true)->toBeTrue(); // Found via prism config
+});

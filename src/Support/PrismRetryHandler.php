@@ -226,8 +226,8 @@ class PrismRetryHandler
     protected function validateApiKey(string $provider): void
     {
         $key = match ($provider) {
-            'openai' => config('services.openai.api_key', config('prism.providers.openai.api_key')),
-            'anthropic' => config('services.anthropic.api_key', config('prism.providers.anthropic.api_key')),
+            'openai' => config('services.openai.api_key') ?? config('prism.providers.openai.api_key'),
+            'anthropic' => config('services.anthropic.api_key') ?? config('prism.providers.anthropic.api_key'),
             default => 'present', // Unknown providers — let Prism handle validation
         };
 

@@ -279,3 +279,65 @@ test('stream returns RagStream', function () {
     expect(makePipeline(store: $store, prism: $prism)->stream('q'))
         ->toBeInstanceOf(\Moneo\LaravelRag\Streaming\RagStream::class);
 });
+
+// === fromMany() ===
+
+test('fromMany returns a clone with modelClasses set', function () {
+    $p = makePipeline();
+    $clone = $p->fromMany(['App\\Models\\A', 'App\\Models\\B']);
+
+    expect($clone)->not->toBe($p)
+        ->and($clone)->toBeInstanceOf(RagPipeline::class);
+});
+
+test('fromMany sets modelClasses correctly', function () {
+    $pipeline = makePipeline();
+    $clone = $pipeline->fromMany(['App\\Models\\Player', 'App\\Models\\Team']);
+
+    $ref = new ReflectionClass($clone);
+    $prop = $ref->getProperty('modelClasses');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($clone))->toBe(['App\\Models\\Player', 'App\\Models\\Team']);
+});
+
+test('from resets modelClasses', function () {
+    $pipeline = makePipeline();
+    $multi = $pipeline->fromMany(['App\\Models\\A', 'App\\Models\\B']);
+    $single = $multi->from('App\\Models\\C');
+
+    $ref = new ReflectionClass($single);
+    $prop = $ref->getProperty('modelClasses');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($single))->toBe([]);
+});
+
+test('resolveTables returns single table for from()', function () {
+    $pipeline = makePipeline();
+    $ref = new ReflectionClass($pipeline);
+    $method = $ref->getMethod('resolveTables');
+    $method->setAccessible(true);
+
+    expect($method->invoke($pipeline))->toBe(['documents']);
+});
+
+// === config system prompt fallback ===
+
+test('generate uses config system prompt as fallback', function () {
+    config(['rag.system_prompt' => 'Custom global prompt.']);
+
+    $store = Mockery::mock(VectorStoreContract::class);
+    $store->shouldReceive('table')->andReturnSelf();
+    $store->shouldReceive('similaritySearch')->andReturn(collect([
+        ['id' => '1', 'score' => 0.9, 'metadata' => [], 'content' => 'Context'],
+    ]));
+
+    $prism = Mockery::mock(PrismRetryHandler::class);
+    $prism->shouldReceive('embed')->andReturn([0.1]);
+    $prism->shouldReceive('generate')
+        ->withArgs(fn ($p, $m, $sys, $q) => str_contains($sys, 'Custom global prompt.'))
+        ->andReturn('Answer.');
+
+    makePipeline(store: $store, prism: $prism)->ask('Q?');
+});
