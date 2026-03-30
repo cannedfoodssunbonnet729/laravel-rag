@@ -42,6 +42,32 @@ class RagResult implements Arrayable
     }
 
     /**
+     * Get actual Eloquent model instances from the source chunks.
+     *
+     * Requires that chunks were stored with 'model' and 'id' in metadata
+     * (this is the default when using rag:index or IngestPipeline).
+     *
+     * @return Collection<int, \Illuminate\Database\Eloquent\Model>
+     */
+    public function sourceModels(): Collection
+    {
+        return $this->chunks
+            ->filter(fn (array $chunk): bool => isset($chunk['metadata']['model'], $chunk['metadata']['id']))
+            ->map(function (array $chunk): ?\Illuminate\Database\Eloquent\Model {
+                $modelClass = $chunk['metadata']['model'];
+                $id = $chunk['metadata']['id'];
+
+                if (! class_exists($modelClass)) {
+                    return null;
+                }
+
+                return $modelClass::find($id);
+            })
+            ->filter()
+            ->values();
+    }
+
+    /**
      * Get total time in milliseconds.
      */
     public function totalTimeMs(): float

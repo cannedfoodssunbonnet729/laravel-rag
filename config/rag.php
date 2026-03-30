@@ -62,6 +62,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default System Prompt
+    |--------------------------------------------------------------------------
+    |
+    | The default system prompt sent to the LLM. Override per-request with
+    | ->systemPrompt(). Set via RAG_SYSTEM_PROMPT in .env.
+    |
+    */
+    'system_prompt' => env('RAG_SYSTEM_PROMPT', 'You are a helpful assistant. Answer the question based on the provided context. If the context does not contain enough information, say so.'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Ingest Pipeline
     |--------------------------------------------------------------------------
     */

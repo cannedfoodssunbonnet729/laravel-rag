@@ -19,6 +19,9 @@ class RagPipeline
 {
     protected ?string $modelClass = null;
 
+    /** @var array<int, string> Multiple model classes for multi-model RAG */
+    protected array $modelClasses = [];
+
     protected int $limit;
 
     protected float $threshold = 0.0;
@@ -65,12 +68,30 @@ class RagPipeline
     }
 
     /**
-     * Set the source model class for retrieval.
+     * Set a single source model class for retrieval.
      */
     public function from(string $modelClass): static
     {
         $clone = clone $this;
         $clone->modelClass = $modelClass;
+        $clone->modelClasses = [];
+
+        return $clone;
+    }
+
+    /**
+     * Set multiple source model classes for cross-model RAG.
+     *
+     * Searches across all models, merges results by score, then generates answer.
+     * Example: Rag::fromMany([Player::class, Team::class])->ask('question')
+     *
+     * @param  array<int, string>  $modelClasses
+     */
+    public function fromMany(array $modelClasses): static
+    {
+        $clone = clone $this;
+        $clone->modelClasses = $modelClasses;
+        $clone->modelClass = $modelClasses[0] ?? null;
 
         return $clone;
     }
@@ -248,22 +269,34 @@ class RagPipeline
     public function retrieve(string $question): Collection
     {
         $vector = $this->embed($question);
-        $table = $this->resolveTable();
-        $store = $this->vectorStore->table($table);
-
         $retrieveLimit = $this->useReranking ? $this->limit * 4 : $this->limit;
 
-        if ($this->useHybrid) {
-            $chunks = $this->hybridSearch->search(
-                table: $table,
-                query: $question,
-                vector: $vector,
-                semanticWeight: $this->semanticWeight,
-                fulltextWeight: $this->fulltextWeight,
-                limit: $retrieveLimit,
-            );
-        } else {
-            $chunks = $store->similaritySearch($vector, $retrieveLimit, $this->threshold);
+        // Multi-model: search across all models, merge by score
+        $tables = $this->resolveTables();
+        $chunks = collect();
+
+        foreach ($tables as $table) {
+            $store = $this->vectorStore->table($table);
+
+            if ($this->useHybrid) {
+                $tableChunks = $this->hybridSearch->search(
+                    table: $table,
+                    query: $question,
+                    vector: $vector,
+                    semanticWeight: $this->semanticWeight,
+                    fulltextWeight: $this->fulltextWeight,
+                    limit: $retrieveLimit,
+                );
+            } else {
+                $tableChunks = $store->similaritySearch($vector, $retrieveLimit, $this->threshold);
+            }
+
+            $chunks = $chunks->merge($tableChunks);
+        }
+
+        // Sort by score descending across all models
+        if (count($tables) > 1) {
+            $chunks = $chunks->sortByDesc('score')->values();
         }
 
         // Apply metadata filters
@@ -352,7 +385,7 @@ class RagPipeline
         $provider = $this->provider ?? config('rag.llm.provider');
         $model = $this->model ?? config('rag.llm.model');
 
-        $systemPromptText = $this->systemPrompt ?? 'You are a helpful assistant. Answer the question based on the provided context. If the context does not contain enough information, say so.';
+        $systemPromptText = $this->systemPrompt ?? config('rag.system_prompt', 'You are a helpful assistant. Answer the question based on the provided context. If the context does not contain enough information, say so.');
 
         $fullPrompt = "{$systemPromptText}\n\nContext:\n{$context}";
 
@@ -372,5 +405,22 @@ class RagPipeline
         }
 
         return 'documents';
+    }
+
+    /**
+     * Resolve table names for all model classes (single or multi-model).
+     *
+     * @return array<int, string>
+     */
+    protected function resolveTables(): array
+    {
+        if ($this->modelClasses !== []) {
+            return array_map(
+                fn (string $class): string => (new $class)->getTable(),
+                $this->modelClasses,
+            );
+        }
+
+        return [$this->resolveTable()];
     }
 }

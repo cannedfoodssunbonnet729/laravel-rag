@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Moneo\LaravelRag\Support;
 
 use Moneo\LaravelRag\Exceptions\DimensionMismatchException;
+use Moneo\LaravelRag\Exceptions\MissingApiKeyException;
 use Moneo\LaravelRag\Exceptions\EmbeddingRateLimitException;
 use Moneo\LaravelRag\Exceptions\EmbeddingResponseException;
 use Moneo\LaravelRag\Exceptions\EmbeddingServiceException;
@@ -35,6 +36,8 @@ class PrismRetryHandler
      */
     public function embed(string $text, string $driver, string $model, ?int $expectedDimensions = null): array
     {
+        $this->validateApiKey($driver);
+
         return $this->retry(function () use ($text, $driver, $model, $expectedDimensions) {
             $response = Prism::embeddings()
                 ->using($driver, $model)
@@ -67,6 +70,8 @@ class PrismRetryHandler
      */
     public function generate(string $provider, string $model, string $systemPrompt, string $userPrompt): string
     {
+        $this->validateApiKey($provider);
+
         return $this->retry(function () use ($provider, $model, $systemPrompt, $userPrompt) {
             $response = Prism::text()
                 ->using($provider, $model)
@@ -211,6 +216,24 @@ class PrismRetryHandler
         $jitter = random_int(0, (int) ($delay * 0.3));
 
         return $delay + $jitter;
+    }
+
+    /**
+     * Validate that an API key is configured for the given provider.
+     *
+     * @throws MissingApiKeyException
+     */
+    protected function validateApiKey(string $provider): void
+    {
+        $key = match ($provider) {
+            'openai' => config('services.openai.api_key') ?? env('OPENAI_API_KEY'),
+            'anthropic' => config('services.anthropic.api_key') ?? env('ANTHROPIC_API_KEY'),
+            default => 'present', // Unknown providers — let Prism handle validation
+        };
+
+        if (empty($key)) {
+            throw new MissingApiKeyException($provider);
+        }
     }
 
     /**
